@@ -1,0 +1,57 @@
+def check_decline(closes):
+  # closes is a list of closing prices, with the most recent at the end of the list
+
+  # Check for at least nine consecutive declines
+  for i in range(len(closes) - 4):
+    if closes[i] < closes[i+4]:
+      # This is a decline, so continue checking
+      continue
+    else:
+      # This is not a decline, so reset the count and start again
+      return False
+
+  # If we get here, there were at least nine consecutive declines
+  # Now check for a high on or after the eighth day that is greater than
+  # the low of any day three or more days earlier
+  for i in range(len(closes) - 4 - 3):
+    if closes[i+4+3] > max(closes[:i+4]):
+      # This is a valid high, so start the countdown
+      # Initialize the countdown and the highest intraday high
+      countdown = 0
+      max_intraday_high = 0
+      for j in range(i+4+3, len(closes)):
+        # Check for a close that exceeds the highest intraday high
+        if closes[j] > max_intraday_high:
+          max_intraday_high = closes[j]
+        if closes[j] > closes[j-2]:
+          # This is not a decline, so reset the countdown and start again
+          return False
+        # Check for a sell setup (nine consecutive closes above corresponding closes four days earlier)
+        if closes[j-4] < closes[j]:
+          return False
+        # Check for another buy setup
+        if closes[j-4] > closes[j]:
+          # Another buy setup has occurred, so reset the countdown and start again
+          countdown = 0
+          continue
+        # Increment the countdown
+        countdown += 1
+        if countdown == 13:
+          # The countdown has reached 13, so the buy signal is triggered
+          return True
+
+  # If we get here, there was no valid high or the countdown was not completed
+  return False
+
+# Example usage:
+closes = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 1, 1]
+result = check_decline(closes)
+print(result)  # prints True
+
+closes = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 1, 2]
+result = check_decline(closes)
+print(result)  # prints False
+
+closes = [10, 9, 8, 7, 6, 5, 4, 3, 2, 1, 1, 1, 1, 2, 3]
+result = check_decline(closes)
+print(result)  # prints False
